@@ -1,24 +1,62 @@
-# Parity with instantSeal engine and byzantium EIPs enabled
+# Parity with ethminer on foundation fork
 
-This is parity instantSeal byzantium enabled development mode
+This is parity mines on a foundation fork, with low difficulty so single cpu miner is enough. The networkID is **72**. Peer protocol is disabled so node does not sync.
+
+**use it only for development purposes. this node is not secured, a lot of accounts are unlocked, there are standard authcodes, ALSO YOUR MAINNET WALLETS WORK HERE SO MIND WHERE ARE YOU MAKING TRANSACTIONS**
 
 ## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. 
 
 ### Installing
 
 Clone repository and build docker container
 ```
-docker-compose -p eth_parity_dev_node -f docker-compose.yml up --build -d
+make run
 ```
-In case of linux run
+or
 ```
-sudo docker-compose -p eth_parity_dev_node -f docker-compose.yml up --build -d
+docker-compose -p eth_parity_foundation_fork -f docker-compose.yml up --build -d
 ```
+
+This node requires that parity database create by fully sync foundation node is available in `/var/lib/docker/volumes/backend_parity_data/_data/chains/ethereum`.
+You can change this location in docker-compose. Please note that if you sync parity with warp enabled you will have access to past events, therefore we do not advise it.
+Use --no-warp when syncing. Still properly configuring the fork requires to provide "bombDefuseTransition": in foundation-fork.json to the last synced mainnet block. This will prevent miner in the container from stopping producing blocks.
+
+### Obtaining Ether
+
+Just wait for ethminer to create DAG (long) and then `0x8a194c13308326173423119f8dcb785ce14c732b` will start receiving block rewards
+
+### Recreating fork
+
+Here is the procedure to create foundation fork we used.
+
+1. sync mainnet node with --no-warp. this is crucial to preserve log events!
+2. stop parity
+3. copy foundation.json from https://raw.githubusercontent.com/paritytech/parity/a7887fa9f11bbbc05b48f06f75a85383a86a5f2a/ethcore/res/ethereum/foundation.json , rename to foundation-fork.json
+4. change storage location in chainspec ("dataDir": "foundation-fork",)
+and change the networkId ("networkID" : "0x19",) this is super important to prevent syncing to mainnet and mixing up transactions. Note that single byte code < 127 is preferable. (Nano Ledger libraries will not sign higher chaincodes).
+5. now lower the difficulty and disable ice age (provide next last block to head in snapshot)
+```
+  "minimumDifficulty": "0x01",
+  "difficultyBoundDivisor": "1",
+  "difficultyIncrementDivisor": "0x4",
+  "durationLimit": "0x0d",
+  "bombDefuseTransition": "5462881" <-- here put last block you have got from mainnet,
+```
+https://wiki.parity.io/Pluggable-Consensus.html
+https://wiki.parity.io/Chain-specification.html
+
+8. install and run ethhash
+https://steemit.com/ethereum/@virtualcoin/how-to-mine-ethereum-using-the-cpu-for-linux
+https://wiki.parity.io/Mining
+
+`ethminer -C`
+9. run parity (see `supervisord.conf`)
+
+and you should have block quite irregularly but with median of 4 seconds
+
 ### Parity version
 
-We use `parity_1.9.5_ubuntu_amd64.deb` from parity website.
+We use `parity 1.9.7` from parity website
 
 ## Connecting to node
 
@@ -27,25 +65,13 @@ To connect to web interface of the node
 ```
 http://127.0.0.1:8180/
 ```
-For the first generation of authentication token you need to issue command
-```
-parity signer new-token
-```
-And make sure that authtokens file is in /var/parity/signer (it's a volume)
 
-### Deployment with Truffle
+If used remotely
+1. we setup authcodes, you can use those to login remotely
+2. ports 8180 and 8546 (websocket) must be accessible to use UI remotely
 
-Parity will not work with Truffle. Truffle expects null returned as receipt when transaction is still pending, parity returns normal receipt but with blockHash == null. You can force this behavior (so called `geth` mode) by executing (mind trailing `--geth --force-ui` flags)
+**it's really only meant for dev**
 
-When deploying it's good idea to unlock your account. Command line was provided in `supervisord.conf` (default one) unlocks 8 predefined accounts. Unlocked account must have `test` password. If not change password file.
+## Backuping and restoring tip of the chain
 
-### Byzantium and pre-byzantium error handling for calls and transaction
-
-**Calling constant method that reverts**
-* pre-byzantium and post byzantium parity will return `result: 0x` (0x in result field of JSON-RPC response). Clearly it does not look as the error code ;> and if you are using web3, it will try to decode and fail specific expection per expected data type returned (like invalid BigNumber or address), some types will just succeed so **BEWARE**
-* `testrpc` will return exception string `invalid opcode` and stack trace in `error` field of JSON-RPC response
-
-**Executing transactions that revert**
-* pre-byzantium parity - normal transaction object and transaction receipt are returned (just with all gas used). there is no other way to detect revert besides generating and checking events in case of success (so lack of event is error situation). this is very weak
-* post-byzantium parity and other nodes - there is `status` field in transaction receipt! use this. use Neufund modified truffle that recognize this situation (https://github.com/Neufund/truffle), `neufund` branch.
-* `testrpc` will return exception string `invalid opcode` and stack trace in `error` field of JSON-RPC response
+Easiest way is to just store original chain and copy it over to "reset" the node. However chain is huge. We'll provide more info once procedures of copying just last few snapshots are established.
