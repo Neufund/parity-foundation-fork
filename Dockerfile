@@ -21,8 +21,11 @@ COPY authcodes /var/parity/signer/authcodes
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-RUN apt-get install -y software-properties-common && \
-    add-apt-repository ppa:ethereum/ethereum && \
+COPY cleanup.sh /root/cleanup.sh
+
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:ethereum/ethereum && \    
     apt-get update && \
     apt-get install -y ethminer
 # RUN parity --chain /var/parity/chains/foundation-fork.json signer new-token
