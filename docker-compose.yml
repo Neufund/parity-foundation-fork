@@ -4,8 +4,8 @@ services:
     build: ./
     ports:
      - "8546:8546"
-     - "8545:8545"       
-     - "8180:8180"
+     - "8545:8545"
+     - "30303:30303"
     restart: always     
     volumes:
      - /var/lib/docker/volumes/backend_parity_data/_data/chains/ethereum:/var/parity/chains/foundation-fork/

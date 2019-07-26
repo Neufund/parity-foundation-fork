@@ -5,9 +5,15 @@ RUN apt-get update && \
     curl \
     supervisor;
 
-RUN curl --fail -o parity.deb http://d1h4xl4cr1h0mo.cloudfront.net/v1.9.7/x86_64-unknown-linux-gnu/parity_1.9.7_ubuntu_amd64.deb
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:ethereum/ethereum && \
+    apt-get update && \
+    apt-get install -y ethminer
 
-RUN dpkg -i parity.deb
+
+RUN curl --fail -o parity https://releases.parity.io/ethereum/v2.4.2/x86_64-unknown-linux-gnu/parity
+RUN mv parity /usr/bin && chmod +x /usr/bin/parity
 
 RUN mkdir /var/parity && \
     mkdir /var/parity/keys && \
@@ -18,19 +24,10 @@ COPY foundation-fork.json /var/parity/chains/foundation-fork.json
 COPY keys/ /var/parity/keys/foundation-fork/
 COPY password /var/parity/password
 COPY authcodes /var/parity/signer/authcodes
+COPY peers.txt /var/parity/peers.txt
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 COPY cleanup.sh /root/cleanup.sh
 
-RUN apt-get update && \
-    apt-get install -y software-properties-common && \
-    add-apt-repository ppa:ethereum/ethereum && \    
-    apt-get update && \
-    apt-get install -y ethminer
-# RUN parity --chain /var/parity/chains/foundation-fork.json signer new-token
-# RUN parity --datadir /var/parity signer new-token
-# RUN parity --ui-path /var/parity/signer signer new-token
-
-# EXPOSE 8180
 CMD ["/usr/bin/supervisord"]
