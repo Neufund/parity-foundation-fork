@@ -12,7 +12,7 @@ RUN apt-get update && \
     apt-get install -y ethminer
 
 
-RUN curl --fail -o parity https://releases.parity.io/ethereum/v2.4.2/x86_64-unknown-linux-gnu/parity
+RUN curl --fail -o parity https://releases.parity.io/ethereum/v2.4.6/x86_64-unknown-linux-gnu/parity
 RUN mv parity /usr/bin && chmod +x /usr/bin/parity
 
 RUN mkdir /var/parity && \

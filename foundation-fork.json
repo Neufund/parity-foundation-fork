@@ -154,7 +154,12 @@
 		"eip140Transition": 4370000,
 		"eip211Transition": 4370000,
 		"eip214Transition": 4370000,
-		"eip658Transition": 4370000
+		"eip658Transition": 4370000,
+		"eip145Transition": "0xba7754",
+		"eip1014Transition": "0xba7754",
+		"eip1052Transition": "0xba7754",
+		"eip1283Transition": "0xba7754",
+		"eip1283DisableTransition": "0xba7754"
 	},
 	"genesis": {
 		"seal": {
