@@ -21,6 +21,9 @@ This node requires that parity database create by fully sync foundation node is 
 You can change this location in docker-compose. Please note that if you sync parity with warp enabled you will have access to past events, therefore we do not advise it.
 Use --no-warp when syncing. Still properly configuring the fork requires to provide "bombDefuseTransition": in foundation-fork.json to the last synced mainnet block. This will prevent miner in the container from stopping producing blocks.
 
+### Using compiled parity version
+You can build custom parity by modifying `Dockerfile.rust` and using `make run-rust`. Currently we use it to build a version with custom JSON-RPC command `getLogDetails`.
+
 ### Obtaining Ether
 
 Just wait for ethminer to create DAG (long) and then `0x8a194c13308326173423119f8dcb785ce14c732b` will start receiving block rewards
