@@ -1,0 +1,81 @@
+FROM ubuntu:xenial
+
+RUN apt-get update && \
+    apt-get install -y \
+    curl \
+    supervisor \
+    freeglut3
+
+# RUN apt-get install -y libboost-random1.58.0 libboost-thread1.58.0 libjsonrpccpp-client0 libjsonrpccpp-server0 libglu1-mesa libleveldb1v5 ocl-icd-libopencl1 miniupnpc
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:ethereum/ethereum && \
+    apt-get update && \
+    apt-get install -y ethminer
+
+
+WORKDIR /build
+
+# COPY ethminer_1.2.9-SNAPSHOT--20160629-6a05dd7~xenial-0ubuntu2_amd64.deb .
+# RUN dpkg -i ethminer_1.2.9-SNAPSHOT--20160629-6a05dd7~xenial-0ubuntu2_amd64.deb
+RUN ethminer --version
+
+# install tools and dependencies
+RUN apt-get install -y \
+        g++ \
+        build-essential \
+        git \
+        file \
+        binutils \
+        pkg-config \
+        libssl-dev \
+        libudev-dev \
+        python \
+        make \
+        ca-certificates \
+        zip \
+        dpkg-dev \
+        rhash \
+        openssl \
+        gcc \
+        libc6 \
+        libc6-dev \
+        cmake \
+        clang
+# install rustup
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+# rustup directory
+ENV PATH /root/.cargo/bin:$PATH
+# show backtraces
+ENV RUST_BACKTRACE 1
+# show tools
+RUN rustc -vV && cargo -V && gcc -v && g++ -v
+# build parity
+RUN git clone https://github.com/Neufund/parity && \
+        cd parity && \
+        git checkout v2.5.10-stable-log-details && \
+        cargo build --release --verbose && \
+        ls /build/parity/target/release/parity && \
+        strip /build/parity/target/release/parity
+
+
+
+# RUN curl --fail -o parity https://releases.parity.io/ethereum/v2.4.6/x86_64-unknown-linux-gnu/parity
+RUN mv /build/parity/target/release/parity /usr/bin && chmod +x /usr/bin/parity
+
+RUN mkdir /var/parity && \
+    mkdir /var/parity/keys && \
+    mkdir /var/parity/keys/foundation-fork/ && \
+    mkdir /var/parity/signer
+
+COPY foundation-fork.json /var/parity/chains/foundation-fork.json
+COPY keys/ /var/parity/keys/foundation-fork/
+COPY password /var/parity/password
+COPY authcodes /var/parity/signer/authcodes
+COPY peers.txt /var/parity/peers.txt
+
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+COPY cleanup.sh /root/cleanup.sh
+
+CMD ["/usr/bin/supervisord"]
