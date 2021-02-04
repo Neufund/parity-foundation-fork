@@ -1,7 +1,7 @@
 help:
 	@echo "container - builds parity container"
 	@echo "run - runs node"
-	@echo "donw - bring node down"
+	@echo "down - bring node down"
 
 container:
 	docker build . -t neufund/parity-foundation-fork

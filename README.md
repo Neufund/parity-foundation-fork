@@ -45,8 +45,8 @@ and change the networkId ("networkID" : "0x19",) this is super important to prev
   "durationLimit": "0x0d",
   "bombDefuseTransition": "5462881" <-- here put last block you have got from mainnet,
 ```
-https://wiki.parity.io/Pluggable-Consensus.html
-https://wiki.parity.io/Chain-specification.html
+https://openethereum.wiki/Pluggable-Consensus/  
+https://openethereum.wiki/Chain-specification/
 
 8. install and run ethhash
 https://steemit.com/ethereum/@virtualcoin/how-to-mine-ethereum-using-the-cpu-for-linux
